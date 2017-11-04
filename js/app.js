@@ -1,5 +1,6 @@
-var $wikiElem = $('#wikipedia-links');
-$wikiElem.text("");
+var $wikiElem ;
+//= $('#wikipedia-links');
+//$wikiElem.text("");
 
 
 
@@ -171,6 +172,7 @@ var ViewModel = function() {
 
 
     } //end of for loop
+    
     function handler() {
         populateInfoWindow(this, largeInfoWindow);
         toggleBounce(this);
@@ -190,7 +192,9 @@ var ViewModel = function() {
                 '" target="_blank">' + marker.url + '</a>');
 
             // Open the infowindow on the correct marker.
+           
             infowindow.open(map, marker);
+           
             // Make sure the marker property is cleared if the infowindow is closed.
             infowindow.addListener('closeclick', function() {
                 infowindow.marker = null;
@@ -199,14 +203,14 @@ var ViewModel = function() {
     };
 
     var toggleBounce = function(marker) {
-        if (marker.getAnimation() !== null) {
-            marker.setAnimation(null);
-        } else {
+       // if (marker.getAnimation() !== null) {
+           // marker.setAnimation(null);
+       // } else {
             marker.setAnimation(google.maps.Animation.BOUNCE);
             setTimeout(function() {
                 marker.setAnimation(null);
             }, 1000);
-        }
+       // }
     };
 
     this.setMarker = function(data) {
@@ -232,10 +236,10 @@ var ViewModel = function() {
     this.filteredResList = ko.computed(function() {
         return ko.utils.arrayFilter(self.restaurantList(), function(resLoc) {
             if (self.query().length === 0 || resLoc.name.toLowerCase().indexOf(self.query().toLowerCase()) > -1) {
-                resLoc.visible(true);
+               marker.setVisible(true);
                 return true;
             } else {
-                resLoc.visible(false);
+               marker.setVisible(false);
                 return false;
             }
         });
@@ -245,7 +249,7 @@ var ViewModel = function() {
 
     // If the wikiRequest times out, then display a message with a link to the Wikipedia page.
     var wikiRequestTimeout = setTimeout(function() {
-     // var msg = 'failed to get wikipedia resources, Please Click here: <a href="';
+     var msg = 'failed to get wikipedia resources, Please Click here: <a href="';
       var wikiUrl = 'https://en.wikipedia.org/wiki/';
 
       for(var i=0; i<self.restaurantList().length; i++) {
@@ -258,9 +262,14 @@ var ViewModel = function() {
       
       var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + self.restaurantList()[i].name + '&format=json&callback=wikiCallback';
 
-      $.ajax({url: wikiUrl,
+      $.ajax({
+        url: wikiUrl,
         dataType:'jsonp',
-        success: function(response) {
+        success: handleData
+      });
+    }
+
+    function handleData(response) {
           var articleList = response[1];
           // Go through the list and find the correct item, then add the wikiSnippet data
           for(var i=0; i<self.restaurantList().length; i++) {
@@ -273,8 +282,6 @@ var ViewModel = function() {
 
           clearTimeout(wikiRequestTimeout);
         }
-      });
-    }
     
 
   };// function getWikiData
