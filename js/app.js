@@ -1,185 +1,340 @@
-//Create a map variable
-var map;
-var markers = [];
-
-var marker;
-
-var largeInfoWindow;
-var vm;
+var $wikiElem = $('#wikipedia-links');
+$wikiElem.text("");
 
 
-function initMap() {
-    vm = new ViewModel();
-    var placeLatlng = {
-        lat: 24.725192,
-        lng: 46.676960
-    };
-    map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 15,
-        center: placeLatlng
-    });
-    largeInfoWindow = new google.maps.InfoWindow();
-    ko.applyBindings(vm);
-    placeMarkers();
-}
-var currentPlaces = [{
-    geometry: {
-        lat: 24.735826,
-        lng: 46.575967
+
+var initialRestaurants = [{
+
+        name: 'Erqa',
+        latlngLoc: {
+            lat: 24.696498,
+            lng: 46.583576
+        },
+        markerLoc: true,
+        URL: "https://erqa.com/ ",
+        wikiSnippet: '',
+        Street: "1090 dairi",
+        City: "Riyadh",
+        streetViewUrl: "https://maps.googleapis.com/maps/api/streetview?size=180x90&location=",
+        streetViewImage: function() {
+            return this.streetViewUrl + this.Street + ',' + this.City + '';
+        },
+        infoWindow: ''
+
     },
-    properties: "albujiri"
-}, {
-    geometry: {
-        lat: 25.178411,
-        lng: 46.590443
+    {
+
+        name: 'bojeri',
+        latlngLoc: {
+            lat: 24.735787,
+            lng: 46.575613
+        },
+        markerLoc: true,
+        URL: "https://bojeri.com/ ",
+        wikiSnippet: '',
+        Street: "1090 dareah",
+        City: "Riyadh",
+        streetViewUrl: "https://maps.googleapis.com/maps/api/streetview?size=180x90&location=",
+        streetViewImage: function() {
+            return this.streetViewUrl + this.Street + ',' + this.City + '';
+        },
+        infoWindow: ''
+
     },
-    properties: "althomama"
-}];
+    {
 
-var placeMarkers = function() {
-    var bounds = new google.maps.LatLngBounds();
-    for (var i = 0; i < currentPlaces.length; i++) {
-        var position = currentPlaces[i].geometry;
-        var title = currentPlaces[i].properties;
-        var marker = new google.maps.Marker({
-            map: map,
-            position: position,
-            title: title,
-            animation: google.maps.Animation.DROP,
-            id: i
-        });
-        vm.placesList()[i].marker = marker;
-        markers.push(marker);
-        marker.addListener('click', function() {
-            var self = this;
-            populateInfoWindow(this, largeInfoWindow);
-            toggleBounce(this);
-        });
-        bounds.extend(markers[i].position);
+        name: 'heteen',
+        latlngLoc: {
+            lat: 24.771337,
+            lng: 46.587696
+        },
+        markerLoc: true,
+        URL: "https://heteen.com/ ",
+        wikiSnippet: '',
+        Street: "1090 heteen",
+        City: "Riyadh",
+        streetViewUrl: "https://maps.googleapis.com/maps/api/streetview?size=180x90&location=",
+        streetViewImage: function() {
+            return this.streetViewUrl + this.Street + ',' + this.City + '';
+        },
+        infoWindow: ''
 
-        function toggleBounce(currentMarker) {
-            currentMarker.setAnimation(google.maps.Animation.BOUNCE);
-            setTimeout(function() {
-                currentMarker.setAnimation(null);
-            }, 1400);
-        }
+    },
+    {
+
+        name: 'yasmeen',
+        latlngLoc: {
+            lat: 24.822450, 
+            lng: 46.637821
+        },
+        markerLoc: true,
+        URL: "https://yasmeen.com/ ",
+        wikiSnippet: '',
+        Street: "1090 yasmeen",
+        City: "Riyadh",
+        streetViewUrl: "https://maps.googleapis.com/maps/api/streetview?size=180x90&location=",
+        streetViewImage: function() {
+            return this.streetViewUrl + this.Street + ',' + this.City + '';
+        },
+        infoWindow: ''
+
+    },
+    {
+
+        name: 'nakeel',
+        latlngLoc: {
+            lat: 24.742654, 
+            lng: 46.615849
+        },
+        markerLoc: true,
+        URL: "https://nakeel.com/ ",
+        wikiSnippet: '',
+        Street: "1090 nakeel",
+        City: "Riyadh",
+        streetViewUrl: "https://maps.googleapis.com/maps/api/streetview?size=180x90&location=",
+        streetViewImage: function() {
+            return this.streetViewUrl + this.Street + ',' + this.City + '';
+        },
+        infoWindow: ''
+
     }
-    map.fitBounds(bounds);
+];
 
-    function populateInfoWindow(marker, infowindow) {
+var Restaurant = function(data) {
+    var self = this;
+    self.name = data.name;
+    self.latlngLoc = data.latlngLoc;
+    self.markerLoc = data.markerLoc;
+    self.URL = data.URL;
+    self.street = data.street;
+    self.city = data.city;
+    self.wikiSnippet = data.wikiSnippet;
+    self.distance = ko.observable(data.distance);
+    self.infoWindow = data.infoWindow;
+    self.streetViewImage = data.streetViewImage();
+    this.visible = ko.observable(true);
+};
+var map, marker;
+
+var ViewModel = function() {
+    var self = this;
+    this.names = ko.observableArray([]);
+    this.markers = ko.observableArray([]);
+    this.restaurantList = ko.observableArray([]);
+    this.query = ko.observable('');
+
+    initialRestaurants.forEach(function(resLoc) {
+        self.restaurantList.push(new Restaurant(resLoc));
+    });
+    for (var i = 0; i < self.restaurantList().length; i++) {
+
+        marker = new google.maps.Marker({
+            map: map,
+            position: initialRestaurants[i].latlngLoc,
+            title: initialRestaurants[i].name,
+            streetAddress: initialRestaurants[i].Street,
+            cityAddress: initialRestaurants[i].City,
+            url: initialRestaurants[i].URL,
+            wikiSnippet: initialRestaurants[i].wikiSnippet,
+            streetViewImage: initialRestaurants[i].streetViewImage(),
+            draggable: true,
+            visible: true
+
+        });
+
+
+
+
+        self.restaurantList()[i].contentString = '<img src="' + self.restaurantList()[i].streetViewImage +
+            '" alt="Street View Image of ' + self.restaurantList()[i].title + '"><br><hr style="margin-bottom: 5px"><strong>' +
+            self.restaurantList()[i].title + '</strong><br><p>' +
+            self.restaurantList()[i].streetAddress + '<br>' +
+            self.restaurantList()[i].cityAddress + '<br>' +
+            self.restaurantList()[i].wikiSnippet + '<br></p><a class="web-links" href="http://' + self.restaurantList()[i].url +
+            '" target="_blank">' + self.restaurantList()[i].url + '</a>';
+
+        var largeInfoWindow = new google.maps.InfoWindow({
+            content: initialRestaurants[i].contentString
+        });
+        marker.addListener('click', handler); //{
+        // Set the selected for this as true
+        //populateInfoWindow(this, largeInfoWindow);
+        //toggleBounce(this);
+        // });
+
+
+        if (marker.title === this.restaurantList()[i].name) {
+            self.restaurantList()[i].marker = marker;
+            self.restaurantList()[i].infoWindow = largeInfoWindow;
+        }
+
+
+
+    } //end of for loop
+    function handler() {
+        populateInfoWindow(this, largeInfoWindow);
+        toggleBounce(this);
+    }
+
+    var populateInfoWindow = function(marker, infowindow) {
+        // Check to make sure the infowindow is not already opened on this marker.
         if (infowindow.marker != marker) {
-            infowindow.setContent('');
             infowindow.marker = marker;
+
+            infowindow.setContent('<img src="' + marker.streetViewImage +
+                '" alt="Street View Image of ' + marker.title + '"><br><hr style="margin-bottom: 5px"><strong>' +
+                marker.title + '</strong><br><p>' +
+                marker.streetAddress + '<br>' +
+                marker.cityAddress + '<br>' +
+                marker.wikiSnippet + '<br></p><a class="web-links" href="http://' + marker.url +
+                '" target="_blank">' + marker.url + '</a>');
+
+            // Open the infowindow on the correct marker.
+            infowindow.open(map, marker);
+            // Make sure the marker property is cleared if the infowindow is closed.
             infowindow.addListener('closeclick', function() {
                 infowindow.marker = null;
             });
-            var streetViewService = new google.maps.StreetViewService();
-            var radius = 50;
-
-            function getStreetView(data, status) {
-                if (status == google.maps.StreetViewStatus.OK) {
-                    var nearStreetViewLocation = data.location.latLng;
-                    var heading = google.maps.geometry.spherical.computeHeading(nearStreetViewLocation, marker.position);
-                    infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
-                    var panoramaOptions = {
-                        position: nearStreetViewLocation,
-                        pov: {
-                            heading: heading,
-                            pitch: 30
-                        }
-                    };
-                    var panorama = new google.maps.StreetViewPanorama(document.getElementById('pano'), panoramaOptions);
-                } else {
-                    var infowindowHTML = '<div>' + marker.title + '</div>' + "<img width = '80' src =" + marker.image + ">";
-                    infowindow.setContent(infowindowHTML);
-                }
-            }
-            streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-            infowindow.open(map, marker);
-            wikiLinks();
-
-            function wikiLinks() {
-                // var $wikiHeaderElem = $('#wikipedia-header');
-                var wikiRequestTimeout = setTimeout(function() {
-                    $wikiHeaderElem.text("failed to load wikipedia resources");
-                }, 4000);
-                var wikipediaEndPointUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + marker.title + '&format=json';
-                $.ajax({
-                    url: wikipediaEndPointUrl,
-                    data: {
-                        "action": "opensearch",
-                        "search": marker.title,
-                        "format": "json",
-                    },
-                    dataType: "jsonp",
-                    success: function(response) {
-                        vm.wikiInfo({
-                            title: response[0],
-                            url: response[3][0]
-                        });
-                        clearTimeout(wikiRequestTimeout);
-                    }
-                });
-            }
         }
-    }
-};
-var Place = function(data) {
-    this.place = ko.observable(data.geometry);
-    this.title = ko.observable(data.properties);
-    this.image = ko.observable(data.image);
-    this.marker = ko.observable();
-};
-var ViewModel = function() {
-    var self = this;
-    this.placesList = ko.observableArray([]);
-    this.markers = ko.observableArray([]);
-    this.filterTxt = ko.observable("");
-    this.wikiInfo = ko.observable();
-    currentPlaces.forEach(function(placeItem) {
-        self.placesList.push(new Place(placeItem));
-    });
-    markers.forEach(function(marker, i) {
-        self.placesList()[i].markers = marker;
-    });
-    this.currentPlace = ko.observable(this.placesList()[0]);
-    this.placesList.marker = ko.observable(this.placesList()[0]);
-    this.changePlace = function(clickedPlace) {
-        self.currentPlace(clickedPlace);
     };
-    this.setPlace = function(clickedPlace) {
-        self.showPlace(clickedPlace);
-        google.maps.event.trigger(clickedPlace.marker, 'click');
-        map.setCenter(clickedPlace.marker.position);
-        map.setZoom(17);
-    };
-    this.showPlace = function(location) {
-        self.currentPlace(location);
-    };
-    self.filterPlaces = ko.computed(function() {
-        var filter = self.filterTxt().toLowerCase();
-        if (!filter) {
-            for (var i = markers.length - 1; i >= 0; i--) {
-                markers[i].setVisible(true);
-            }
-            return self.placesList();
+
+    var toggleBounce = function(marker) {
+        if (marker.getAnimation() !== null) {
+            marker.setAnimation(null);
         } else {
-            return ko.utils.arrayFilter(self.placesList(), function(placeItem) {
-                var i = currentPlaces.indexOf(placeItem.title());
-                if (placeItem.title().toLowerCase().indexOf(filter) === -1) {
-                    placeItem.marker.setVisible(false);
-                } else {
-                    placeItem.marker.setVisible(true);
-                }
-                return placeItem.title().toLowerCase().indexOf(filter) != -1;
-            });
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(function() {
+                marker.setAnimation(null);
+            }, 1000);
         }
-    });
-};
+    };
 
-function googleSuccess() {
+    this.setMarker = function(data) {
+        self.restaurantList().forEach(function(resLoc) {
+            resLoc.marker.visible = true;
+        });
+        google.maps.event.trigger(data.marker, 'click');
+
+
+        data.marker.visible = true;
+        self.getWikiData();
+
+        data.marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(function() {
+            data.marker.setAnimation(null);
+        }, 2000);
+        map.setCenter(data.marker.position);
+    };
+
+
+
+
+    this.filteredResList = ko.computed(function() {
+        return ko.utils.arrayFilter(self.restaurantList(), function(resLoc) {
+            if (self.query().length === 0 || resLoc.name.toLowerCase().indexOf(self.query().toLowerCase()) > -1) {
+                resLoc.visible(true);
+                return true;
+            } else {
+                resLoc.visible(false);
+                return false;
+            }
+        });
+    });
+
+    this.getWikiData = function() {
+
+    // If the wikiRequest times out, then display a message with a link to the Wikipedia page.
+    var wikiRequestTimeout = setTimeout(function() {
+     // var msg = 'failed to get wikipedia resources, Please Click here: <a href="';
+      var wikiUrl = 'https://en.wikipedia.org/wiki/';
+
+      for(var i=0; i<self.restaurantList().length; i++) {
+        $wikiElem.text("failed to get wikipedia resources");
+        
+      }
+    }, 1000);
+
+    for(var i=0; i<self.restaurantList().length; i++) {
+      
+      var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + self.restaurantList()[i].name + '&format=json&callback=wikiCallback';
+
+      $.ajax({url: wikiUrl,
+        dataType:'jsonp',
+        success: function(response) {
+          var articleList = response[1];
+          // Go through the list and find the correct item, then add the wikiSnippet data
+          for(var i=0; i<self.restaurantList().length; i++) {
+            articleStr = self.restaurantList()[i];
+            var url = 'http://en.wikipedia.org/wiki/' + articleStr;
+                //$wikiElem.append('<li><a href="' + url + '">' + articleStr + '</a></li>');
+              self.restaurantList()[i].wikiSnippet=response[2][0];
+            
+          }
+
+          clearTimeout(wikiRequestTimeout);
+        }
+      });
+    }
+    
+
+  };// function getWikiData
+
+
+   
+  
+  
+  
+  
+}; // end of ViewModel
+
+
+var styles = [{
+    stylers: [{
+            hue: "#00ffe6"
+        },
+        {
+            saturation: -20
+        }
+    ]
+}, {
+    featureType: "road",
+    elementType: "geometry",
+    stylers: [{
+            lightness: 100
+        },
+        {
+            visibility: "simplified"
+        }
+    ]
+}, {
+    featureType: "road",
+    elementType: "labels",
+    stylers: [{
+        visibility: "off"
+    }]
+}];
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 12,
+        center: {
+            lat: 24.712717,
+            lng: 46.674213
+        },
+        styles: styles
+
+    });
+
+
+
+
+    ko.applyBindings(new ViewModel());
+}
+
+
+function googleSuccess(){
     if (typeof google !== 'undefined') {
-        ko.applyBindings(vm);
+       ko.applyBindings(new ViewModel());
     } else {
         googleError();
     }

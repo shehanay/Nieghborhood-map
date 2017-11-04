@@ -1,10 +1,10 @@
 
 
-This project was to learn how to use Google Map's API and one more API. Naturally I chose Wikipedia due to using it in the class. Also, I bind html elements to javascript using knockout.js which makes updates to the DOM almost 
+This project was to learn how to use Google Map's API and one more API. Also, I bind html elements to javascript using knockout.js which makes updates to the DOM almost 
 
 index.html- file contains the html code.
 js/app.js- file contains the well designed model veiw model architecture with knockout bindings.
-css/styles.css contains the header, color and font properties that are applied to the project.
+css/styles.css contains the styles properties that are applied to the project.
 
 Sources:
 
