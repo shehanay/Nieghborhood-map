@@ -1,6 +1,5 @@
-var $wikiElem ;
-//= $('#wikipedia-links');
-//$wikiElem.text("");
+var $wikiElem = $('#wikipedia-links');
+$wikiElem.text("");
 
 
 
@@ -339,14 +338,6 @@ function initMap() {
 }
 
 
-function googleSuccess(){
-    if (typeof google !== 'undefined') {
-       ko.applyBindings(new ViewModel());
-    } else {
-        googleError();
-    }
-}
-
-function googleError() {
-    alert('Google Maps has failed to load. Please contact Google @ google.com.');
+function googleCallBack() {
+    alert("Error Loading The Map");
 }

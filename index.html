@@ -28,11 +28,8 @@
     <div class="map" id="map">Google Maps Error!!</div>
     </div>
     <script src='js/lib/knockout-3.4.2.js'></script>
-  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" ></script>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src='js/app.js'></script>
-    <script async defer
-        src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyAaL7m11LeZkZDSocsuBQzthUvgwdhLLbU&callback=initMap">
-    </script>
-
+  <script async defer src= "https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=places&key=AIzaSyAaL7m11LeZkZDSocsuBQzthUvgwdhLLbU&callback=initMap" onerror="googleCallBack()"></script>
   </body>
 </html>
