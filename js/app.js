@@ -156,11 +156,7 @@ var ViewModel = function() {
         var largeInfoWindow = new google.maps.InfoWindow({
             content: initialRestaurants[i].contentString
         });
-        marker.addListener('click', handler); //{
-        // Set the selected for this as true
-        //populateInfoWindow(this, largeInfoWindow);
-        //toggleBounce(this);
-        // });
+        marker.addListener('click', handler); 
 
 
         if (marker.title === this.restaurantList()[i].name) {
@@ -176,12 +172,12 @@ var ViewModel = function() {
         populateInfoWindow(this, largeInfoWindow);
         toggleBounce(this);
     }
-
+    
     var populateInfoWindow = function(marker, infowindow) {
         // Check to make sure the infowindow is not already opened on this marker.
         if (infowindow.marker != marker) {
             infowindow.marker = marker;
-
+            
             infowindow.setContent('<img src="' + marker.streetViewImage +
                 '" alt="Street View Image of ' + marker.title + '"><br><hr style="margin-bottom: 5px"><strong>' +
                 marker.title + '</strong><br><p>' +
@@ -202,50 +198,34 @@ var ViewModel = function() {
     };
 
     var toggleBounce = function(marker) {
-       // if (marker.getAnimation() !== null) {
-           // marker.setAnimation(null);
-       // } else {
+
             marker.setAnimation(google.maps.Animation.BOUNCE);
             setTimeout(function() {
                 marker.setAnimation(null);
             }, 1000);
-       // }
+ 
     };
 
     this.setMarker = function(data) {
-        self.restaurantList().forEach(function(resLoc) {
-            resLoc.marker.visible = true;
-        });
         google.maps.event.trigger(data.marker, 'click');
-
-
-        data.marker.visible = true;
-        self.getWikiData();
-
-        data.marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(function() {
-            data.marker.setAnimation(null);
-        }, 2000);
-        map.setCenter(data.marker.position);
+        
     };
-
 
 
 
     this.filteredResList = ko.computed(function() {
         return ko.utils.arrayFilter(self.restaurantList(), function(resLoc) {
             if (self.query().length === 0 || resLoc.name.toLowerCase().indexOf(self.query().toLowerCase()) > -1) {
-               marker.setVisible(true);
+               resLoc.marker.setVisible(true);
                 return true;
             } else {
-               marker.setVisible(false);
+               resLoc.marker.setVisible(false);
                 return false;
             }
         });
     });
 
-    this.getWikiData = function() {
-
+    this.getWikiData = function(data) {
     // If the wikiRequest times out, then display a message with a link to the Wikipedia page.
     var wikiRequestTimeout = setTimeout(function() {
      var msg = 'failed to get wikipedia resources, Please Click here: <a href="';
@@ -257,27 +237,26 @@ var ViewModel = function() {
       }
     }, 1000);
 
-    for(var i=0; i<self.restaurantList().length; i++) {
       
-      var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + self.restaurantList()[i].name + '&format=json&callback=wikiCallback';
+      var wikiUrl = 'http://en.wikipedia.org/w/api.php?action=opensearch&search=' + data.name + '&format=json&callback=wikiCallback';
 
       $.ajax({
         url: wikiUrl,
         dataType:'jsonp',
-        success: handleData
+        success: function(response){
+            data.marker.wikiSnippet = response[2][1];
+            
+        }
       });
-    }
 
     function handleData(response) {
+          
           var articleList = response[1];
           // Go through the list and find the correct item, then add the wikiSnippet data
-          for(var i=0; i<self.restaurantList().length; i++) {
             articleStr = self.restaurantList()[i];
             var url = 'http://en.wikipedia.org/wiki/' + articleStr;
-                //$wikiElem.append('<li><a href="' + url + '">' + articleStr + '</a></li>');
-              self.restaurantList()[i].wikiSnippet=response[2][0];
-            
-          }
+              self.restaurantList().marker.wikiSnippet=response[2][0];
+
 
           clearTimeout(wikiRequestTimeout);
         }
@@ -287,7 +266,10 @@ var ViewModel = function() {
 
 
    
-  
+  for(var i=0 ;i<self.restaurantList().length ; i++)
+      {
+          self.getWikiData(self.restaurantList()[i]);
+      }
   
   
   
